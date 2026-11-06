@@ -138,10 +138,11 @@ end-to-end job run.
 
 ### R6 — Visual no-code rebuild
 Run: open the `hospital_monthly_designer` visual data prep (Paper-1) and run its
-flow; it overwrites `claims.gold.hospital_monthly_designer`.
+flow; it writes `claims.gold.hospital_monthly_designer`. NOTE: the flow must be
+re-run if the output table is absent (currently missing from claims.gold).
 Confirm: `claims.gold.hospital_monthly_designer` row-for-row equals the
-code-built `claims.gold.hospital_monthly` (468 rows; EXCEPT in both directions
-returns 0).
+code-built `claims.gold.hospital_monthly` (469 rows as of the current data;
+EXCEPT in both directions returns 0).
 
 ### R7 — Local development
 Run: `python -m pytest tests -v` (see "Run the tests locally" above).
