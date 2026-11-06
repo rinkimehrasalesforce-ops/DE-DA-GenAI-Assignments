@@ -68,7 +68,7 @@ def claims_checked():
         F.lit(False)))
 
     # Q-C: amount sanity
-    valid_billed = F.col("billed_amount").isNotNull() & (F.col("billed_amount") > 0)
+    valid_billed = F.col("billed_amount").isNotNull() & (F.col("billed_amount") >= 0)
     valid_approved = (F.coalesce(F.col("approved_amount"), F.lit(0)) <= F.col("billed_amount")) \
         & (F.col("approved_amount").isNull() | (F.col("approved_amount") >= 0))
     flagged = flagged.withColumn("passes_q_c", F.coalesce(

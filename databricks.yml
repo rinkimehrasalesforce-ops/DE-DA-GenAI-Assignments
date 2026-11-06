@@ -1,0 +1,36 @@
+bundle:
+  name: claims_lakehouse
+
+include:
+  - resources/**/*.yml
+
+# Only pipeline source files are synced with the bundle; job tasks reference
+# the existing workspace notebooks in place.
+sync:
+  include:
+    - src/pipeline/*
+
+variables:
+  source_catalog:
+    description: Catalog holding the shared raw/bronze source data (never duplicated)
+    default: claims
+  target_catalog:
+    description: Catalog where this target's silver/gold tables are published
+    default: claims_dev
+
+targets:
+  dev:
+    default: true
+    mode: development
+    variables:
+      target_catalog: claims_dev
+    workspace:
+      root_path: /Workspace/Users/rinkimehrasalesforce@gmail.com/.bundle/${bundle.name}/${bundle.target}
+  prod:
+    mode: production
+    variables:
+      target_catalog: claims_prod
+    run_as:
+      user_name: rinkimehrasalesforce@gmail.com
+    workspace:
+      root_path: /Workspace/Users/rinkimehrasalesforce@gmail.com/.bundle/${bundle.name}/${bundle.target}

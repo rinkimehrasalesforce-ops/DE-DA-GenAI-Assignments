@@ -1,0 +1,64 @@
+R5 - Databricks CLI evidence log
+=================================
+Date: 2026-11-06 (UTC)
+Workspace: dbc-ca7c7958-3677.cloud.databricks.com (org 7474648424685639)
+
+Setup
+-----
+Databricks CLI v1.24.0 (linux_arm64), installed at ~/.local/bin/databricks.
+Authenticated with a personal access token under the named profile 'paper1'
+in ~/.databrickscfg (driver home, outside the DE-Paper-1 Git folder, chmod 600).
+The token itself is intentionally NOT recorded in this log or committed anywhere.
+
+[1] Catalog listing
+-------------------
+$ databricks catalogs list --profile paper1
+
+Name              Type                    Comment
+uat               MANAGED_CATALOG
+prod             MANAGED_CATALOG
+cyntexa_postgres  MANAGED_ONLINE_CATALOG
+system            SYSTEM_CATALOG          System catalog (auto-created)
+samples           SYSTEM_CATALOG          These sample datasets are made available by third party data providers as well as open data sources. You can learn more about each data set by clicking on each one.
+workspace            MANAGED_CATALOG
+dev                   MANAGED_CATALOG
+project              MANAGED_CATALOG
+neon_foreign_catalog  FOREIGN_CATALOG
+claims                MANAGED_CATALOG
+cyntexa_dev           MANAGED_CATALOG
+vp_rm20040829         MANAGED_CATALOG
+fk_t001               MANAGED_CATALOG
+fk_ce1366             MANAGED_CATALOG
+fk_ce_1366            MANAGED_CATALOG
+
+[2] File copy into dbfs:/Volumes/claims/raw/landing/cli_check/
+---------------------------------------------------------------
+$ echo "R5 CLI copy check $(date -u +%Y-%m-%dT%H:%M:%SZ) - placed by databricks CLI profile paper1" > /tmp/r5_seed.txt
+$ databricks fs mkdirs dbfs:/Volumes/claims/raw/landing/cli_check --profile paper1
+$ databricks fs cp /tmp/r5_seed.txt dbfs:/Volumes/claims/raw/landing/cli_check/r5_seed.txt --profile paper1
+/tmp/r5_seed.txt -> dbfs:/Volumes/claims/raw/landing/cli_check/r5_seed.txt
+$ databricks fs ls dbfs:/Volumes/claims/raw/landing/cli_check --profile paper1
+r5_seed.txt
+
+[3] Job run start (claims_daily, job 519362464251275)
+------------------------------------------------------
+$ databricks jobs run-now 519362464251275 --profile paper1
+
+run_id: 832798467974611
+run_name: claims_daily
+run_type: JOB_RUN
+run_page_url: https://dbc-ca7c7958-3677.cloud.databricks.com/?o=7474648424685639#job/519362464251275/run/832798467974611
+
+[4] Job run result
+-------------------
+$ databricks jobs get-run 832798467974611 --profile paper1 --output json
+
+run_id: 832798467974611
+trigger: ONE_TIME
+life_cycle_state: TERMINATED
+result_state: SUCCESS
+tasks: [('dq_check', 'SUCCESS'), ('publish_gold', 'SUCCESS'), ('ingest', 'SUCCESS'), ('dq_gate', 'SUCCESS'), ('pipeline', 'SUCCESS')]
+
+The run of the claims_daily job (ingest -> pipeline -> dq_check -> dq_gate ->
+publish_gold) completed with result_state SUCCESS; the dq_gate condition
+(dq_problems == 0) passed and publish_gold ran.
