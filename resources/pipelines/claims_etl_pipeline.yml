@@ -1,0 +1,23 @@
+# The pipeline publishes silver (claims_clean, claims_quarantine, dim_policy_scd2)
+# into var.target_catalog (via the pipeline 'catalog' field); all bronze/raw reads
+# come from var.source_catalog via the 'source_catalog' spark conf (see src code).
+resources:
+  pipelines:
+    claims_etl_pipeline:
+      name: claims-etl-pipeline-${bundle.target}
+      catalog: ${var.target_catalog}
+      schema: silver
+      serverless: true
+      photon: true
+      channel: CURRENT
+      continuous: false
+      libraries:
+        - file:
+            path: ../../src/pipeline/my_transformation.py
+        - file:
+            path: ../../src/pipeline/quarantine_rules.py
+        - file:
+            path: ../../src/pipeline/dim_policy_scd2.py
+      configuration:
+        source_catalog: ${var.source_catalog}
+        catalog: ${var.target_catalog}

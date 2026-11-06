@@ -1,0 +1,50 @@
+R7 — Local development: pytest run log (quarantine rules Q-A..Q-E)
+====================================================================
+
+Date:      2026-11-06
+Backend:   Databricks serverless compute (live serverless connection;
+           Python 3.12.3, pytest 8.4.2, pluggy 1.5.0). The tests are pure
+           Python — no Spark session, no cluster spin-up, no pipeline run:
+           they import src/pipeline/quarantine_rules.py directly, so the
+           same suite runs on a developer laptop in well under a second.
+Command:   python -m pytest tests -v -p no:cacheprovider
+           (run with PYTHONDONTWRITEBYTECODE=1 because /Workspace does not
+           support __pycache__/.pytest_cache writes)
+Suite:     tests/test_quarantine_rules.py (conftest.py adds src/pipeline to sys.path)
+Coverage:  one clean row; one failing row per rule Q-A..Q-E; dedupe by
+           submission time (latest wins, _ingest_ts tie-break, nulls last)
+
+--------------------------- pytest output ---------------------------
+
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.4.2, pluggy-1.5.0 -- /local_disk0/.ephemeral_nfs/envs/pythonEnv-60952b8d-e810-4da0-8704-a9a6c2d3a1ca/bin/python
+rootdir: /Workspace/Users/rinkimehrasalesforce@gmail.com/DE-Paper-1
+plugins: anyio-4.10.0
+collected 15 items
+
+tests/test_quarantine_rules.py::test_clean_row_passes_all_rules PASSED   [  6%]
+tests/test_quarantine_rules.py::test_q_a_unknown_member_fails_only_q_a PASSED   [ 13%]
+tests/test_quarantine_rules.py::test_q_b_admission_after_discharge_fails_only_q_b PASSED   [ 20%]
+tests/test_quarantine_rules.py::test_q_c_approved_above_billed_fails_only_q_c PASSED   [ 26%]
+tests/test_quarantine_rules.py::test_q_d_approved_with_rejection_code_fails_only_q_d PASSED   [ 33%]
+tests/test_quarantine_rules.py::test_q_e_wrong_room_days_fails_only_q_e PASSED   [ 40%]
+tests/test_quarantine_rules.py::test_q_b_outside_data_window_fails PASSED   [ 46%]
+tests/test_quarantine_rules.py::test_q_b_null_settled_ts_is_allowed_but_not_before_submission PASSED   [ 53%]
+tests/test_quarantine_rules.py::test_q_c_null_approved_counts_as_zero PASSED   [ 60%]
+tests/test_quarantine_rules.py::test_q_d_each_status_and_unknown_status PASSED   [ 66%]
+tests/test_quarantine_rules.py::test_q_e_same_day_stay_counts_as_one_room_day PASSED   [ 73%]
+tests/test_quarantine_rules.py::test_q_e_null_dates_fall_back_to_one_expected_room_day PASSED   [ 80%]
+tests/test_quarantine_rules.py::test_dedupe_keeps_latest_submission_per_claim PASSED   [ 86%]
+tests/test_quarantine_rules.py::test_dedupe_tie_broken_by_latest_ingest_ts_and_nulls_lose PASSED   [ 93%]
+tests/test_quarantine_rules.py::test_dedupe_null_submitted_ts_loses_to_any_non_null PASSED   [100%]
+
+============================== 15 passed in 0.19s ==============================
+
+--------------------------- summary ---------------------------
+
+15 passed, 0 failed, 0 errors (exit code 0).
+
+Parity note: the pure-Python rules were additionally checked row-by-row
+against the previous vectorized Spark expressions on all 3,120 deduped
+bronze rows — failure counts identical per rule (Q-A 4, Q-B 50, Q-C 4,
+Q-D 6, Q-E 9) and zero per-row disagreements.
